@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Split Taxable Amount and Find Decimal Divisors</title>
+    <style>
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 20px 0;
+      }
+      th, td {
+        border: 1px solid #ddd;
+        text-align: center;
+        padding: 8px;
+      }
+      th {
+        background-color: #f4f4f4;
+      }
+      .bold {
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Split Taxable Amount and Find Decimal Divisors</h1>
+
+    <!-- Input Section for Split Taxable Amount -->
+    <label for="total-amount">Total Amount:</label>
+    <input type="number" id="total-amount" /><br /><br />
+    <label for="splits">Number of Splits:</label>
+    <select id="splits">
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6">6</option>
+      <option value="7">7</option>
+    </select><br /><br />
+    <button onclick="processSplitAndDivisors()">Process</button><br /><br />
+
+    <!-- Result Section -->
+    <div id="result"></div>
+
+    <script>
+      function processSplitAndDivisors() {
+        let totalAmount = parseFloat(
+          document.getElementById("total-amount").value
+        );
+
+        // Calculate taxable and tax amounts
+        let taxableAmount = Math.round((totalAmount / 1.05) * 100) / 100;
+        let taxAmount = Math.round(taxableAmount * 0.05 * 100) / 100;
+        let halfTaxAmount = Math.round(taxAmount / 2 * 100) / 100;
+
+        // Adjust half tax amount
+        halfTaxAmount =
+          halfTaxAmount % 1 >= 0.5
+            ? Math.ceil(halfTaxAmount)
+            : Math.floor(halfTaxAmount);
+
+        taxAmount = 2 * halfTaxAmount;
+        taxableAmount = Math.round((totalAmount - taxAmount) * 100) / 100;
+
+        let splits = parseInt(document.getElementById("splits").value);
+        let splitAmounts = [];
+        let remainingAmount = taxableAmount;
+
+        for (let i = 0; i < splits - 1; i++) {
+          let split =
+            (Math.random() * remainingAmount) / 2 +
+            remainingAmount / (splits - i);
+          split = Math.round(split * 2) / 2;
+          splitAmounts.push(split);
+          remainingAmount = Math.round((remainingAmount - split) * 100) / 100;
+        }
+        splitAmounts.push(remainingAmount);
+
+        // Generate tables for Saree and Fabric
+        let sareeTable = generateDivisorTable(splitAmounts, 785, 1485, "Saree");
+        let fabricTable = generateDivisorTable(splitAmounts, 85, 125, "Fabric");
+
+        document.getElementById("result").innerHTML =
+          `<h2>Result:</h2>` +
+          `<div><span class="bold">Taxable Amount: Rs ${taxableAmount}</span></div>` +
+          `<div><span class="italic">5% Tax Amount: Rs ${taxAmount}</span></div>` +
+          `<div><span class="bold">2.5% Tax Amount: Rs ${halfTaxAmount}</span></div>` +
+          `<br>${sareeTable}<br>${fabricTable}`;
+      }
+
+      function generateDivisorTable(splitAmounts, lowerBound, upperBound, tableName) {
+        let table = `<h3>${tableName}</h3><table><thead><tr><th>Split Amount</th><th>Rate</th><th>Qty</th></tr></thead><tbody>`;
+
+        splitAmounts.forEach((split) => {
+          let divisors = checkDecimalDivisors(split, lowerBound, upperBound);
+          if (divisors.length > 0) {
+            let rateColumn = divisors.join("<br>");
+            let qtyColumn = divisors
+              .map((divisor) => (split / divisor).toFixed(2))
+              .join("<br>");
+
+            table += `<tr>
+              <td>${split.toFixed(2)}</td>
+              <td>${rateColumn}</td>
+              <td>${qtyColumn}</td>
+            </tr>`;
+          } else {
+            table += `<tr>
+              <td>${split.toFixed(2)}</td>
+              <td colspan="2">No divisors found</td>
+            </tr>`;
+          }
+        });
+
+        table += `</tbody></table>`;
+        return table;
+      }
+
+      function checkDecimalDivisors(number, lowerBound, upperBound) {
+        let divisors = [];
+        let precision = 100;
+
+        for (
+          let divisor = lowerBound * precision;
+          divisor <= upperBound * precision;
+          divisor++
+        ) {
+          let divisorValue = divisor / precision;
+          if (number % divisorValue === 0) {
+            divisors.push(divisorValue.toFixed(2));
+          }
+        }
+
+        return divisors;
+      }
+    </script>
+  </body>
+</html>
